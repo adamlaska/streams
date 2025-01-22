@@ -1,9 +1,11 @@
 <pre class=metadata>
 Group: WHATWG
+Status: RD
+Date: 2024-02-19
 H1: Streams
 Shortname: streams
 Text Macro: TWITTER streamsstandard
-Text Macro: LATESTRD 2024-08
+Text Macro: LATESTRD 2024-02
 Abstract: This specification provides APIs for creating, composing, and consuming streams of data
 Abstract: that map efficiently to low-level I/O primitives.
 Translation: ja https://triple-underscore.github.io/Streams-ja.html
@@ -23,44 +25,60 @@ spec:html; type:dfn; text:port message queue
 
 <pre class="anchors">
 urlPrefix: https://tc39.es/ecma262/; spec: ECMASCRIPT
+ type: constructor
+  text: %Uint8Array%; url: #sec-typedarray-objects
+  text: %DataView%; url: #sec-dataview-constructor
+  text: %ArrayBuffer%; url: #sec-arraybuffer-constructor
  type: interface
   text: ArrayBuffer; url: #sec-arraybuffer-objects
   text: DataView; url: #sec-dataview-objects
+  text: Number; url: #sec-ecmascript-language-types-number-type
   text: SharedArrayBuffer; url: #sec-sharedarraybuffer-objects
   text: Uint8Array; url: #sec-typedarray-objects
+  text: %Object.prototype%; url: #sec-properties-of-the-object-prototype-object
  type: dfn
   text: abstract operation; url: #sec-algorithm-conventions-abstract-operations
   text: array; url: #sec-array-objects
   text: async generator; url: #sec-asyncgenerator-objects
   text: async iterable; url: #sec-asynciterable-interface
+  text: completion record; url: #sec-completion-record-specification-type
   text: internal slot; url: #sec-object-internal-methods-and-internal-slots
   text: iterable; url: #sec-iterable-interface
   text: realm; url: #sec-code-realms
   text: the current Realm; url: #current-realm
   text: the typed array constructors table; url: #table-49
   text: typed array; url: #sec-typedarray-objects
-  url: sec-ecmascript-language-types-bigint-type
-   text: is a BigInt
-   text: is not a BigInt
-  url: sec-ecmascript-language-types-boolean-type
-   text: is a Boolean
-   text: is not a Boolean
-  url: sec-ecmascript-language-types-number-type
-   text: is a Number
-   text: is not a Number
-  url: sec-ecmascript-language-types-string-type
-   text: is a String
-   text: is not a String
-  url: sec-ecmascript-language-types-symbol-type
-   text: is a Symbol
-   text: is not a Symbol
-  url: sec-object-type
-   text: is an Object
-   text: is not an Object
+  text: Number type; url: #sec-ecmascript-language-types-number-type
+  text: Data Block; url: #sec-data-blocks
  type: abstract-op
+  text: Call; url: #sec-call
+  text: CloneArrayBuffer; url: #sec-clonearraybuffer
+  text: CopyDataBlockBytes; url: #sec-copydatablockbytes
+  text: CreateArrayFromList; url: #sec-createarrayfromlist
+  text: CreateBuiltinFunction; url: #sec-createbuiltinfunction
+  text: CreateDataProperty; url: #sec-createdataproperty
+  text: Construct; url: #sec-construct
+  text: DetachArrayBuffer; url: #sec-detacharraybuffer
+  text: Get; url: #sec-get-o-p
+  text: GetIterator; url: #sec-getiterator
+  text: GetMethod; url: #sec-getmethod
+  text: GetV; url: #sec-getv
+  text: IsDetachedBuffer; url: #sec-isdetachedbuffer
   text: IsInteger; url: #sec-isinteger
+  text: IteratorComplete; url: #sec-iteratorcomplete
+  text: IteratorNext; url: #sec-iteratornext
+  text: IteratorValue; url: #sec-iteratorvalue
+  text: OrdinaryObjectCreate; url: #sec-ordinaryobjectcreate
+  text: SameValue; url: #sec-samevalue
+  text: Type; url: #sec-ecmascript-data-types-and-values
  text: TypeError; url: #sec-native-error-types-used-in-this-standard-typeerror; type: exception
  text: map; url: #sec-array.prototype.map; type: method; for: Array.prototype
+urlPrefix: https://webassembly.github.io/spec/js-api/; spec: WASM-JS-API-1
+ type: interface
+  text: Memory; url: #memory
+ type: attribute
+  text: buffer; for: Memory; url: #dom-memory-buffer
+url: https://wicg.github.io/compression/#compressionstream; spec: COMPRESSION; type: interface; text: CompressionStream
 </pre>
 
 <style>
@@ -1446,7 +1464,7 @@ value: newViewOnSameMemory, done: true }</code> for closed streams. If the strea
  method steps are:
 
  1. If |view|.\[[ByteLength]] is 0, return [=a promise rejected with=] a {{TypeError}} exception.
- 1. If |view|.\[[ViewedArrayBuffer]].\[[ByteLength]] is 0, return [=a promise rejected
+ 1. If |view|.\[[ViewedArrayBuffer]].\[[ArrayBufferByteLength]] is 0, return [=a promise rejected
     with=] a {{TypeError}} exception.
  1. If ! [$IsDetachedBuffer$](|view|.\[[ViewedArrayBuffer]]) is true, return
     [=a promise rejected with=] a {{TypeError}} exception.
@@ -1876,7 +1894,7 @@ has the following [=struct/items=]:
 for="ReadableByteStreamController">enqueue(|chunk|)</dfn> method steps are:
 
  1. If |chunk|.\[[ByteLength]] is 0, throw a {{TypeError}} exception.
- 1. If |chunk|.\[[ViewedArrayBuffer]].\[[ByteLength]] is 0, throw a {{TypeError}}
+ 1. If |chunk|.\[[ViewedArrayBuffer]].\[[ArrayBufferByteLength]] is 0, throw a {{TypeError}}
     exception.
  1. If [=this=].[=ReadableByteStreamController/[[closeRequested]]=] is true, throw a {{TypeError}}
     exception.
@@ -2177,7 +2195,7 @@ The following abstract operations operate on {{ReadableStream}} instances at a h
   1. Let |nextPromise| be [=a promise resolved with=] |nextResult|.\[[Value]].
   1. Return the result of [=reacting=] to |nextPromise| with the following fulfillment steps,
      given |iterResult|:
-   1. If |iterResult| [=is not an Object=], throw a {{TypeError}}.
+   1. If [$Type$](|iterResult|) is not Object, throw a {{TypeError}}.
    1. Let |done| be ? [$IteratorComplete$](|iterResult|).
    1. If |done| is true:
     1. Perform ! [$ReadableStreamDefaultControllerClose$](|stream|.[=ReadableStream/[[controller]]=]).
@@ -2199,7 +2217,7 @@ The following abstract operations operate on {{ReadableStream}} instances at a h
   1. Let |returnPromise| be [=a promise resolved with=] |returnResult|.\[[Value]].
   1. Return the result of [=reacting=] to |returnPromise| with the following fulfillment steps,
      given |iterResult|:
-   1. If |iterResult| [=is not an Object=], throw a {{TypeError}}.
+   1. If [$Type$](|iterResult|) is not Object, throw a {{TypeError}}.
    1. Return undefined.
  1. Set |stream| to ! [$CreateReadableStream$](|startAlgorithm|, |pullAlgorithm|, |cancelAlgorithm|,
     0).
@@ -2696,7 +2714,7 @@ the {{ReadableStream}}'s public API.
 
 <div algorithm>
  <dfn abstract-op lt="ReadableStreamAddReadRequest"
- id="readable-stream-add-read-request">ReadableStreamAddReadRequest(|stream|, |readRequest|)</dfn>
+ id="readable-stream-add-read-request">ReadableStreamAddReadRequest(|stream|, |readRequest|</dfn>
  performs the following steps:
 
  1. Assert: |stream|.[=ReadableStream/[[reader]]=] [=implements=] {{ReadableStreamDefaultReader}}.
@@ -3348,11 +3366,7 @@ The following abstract operations support the implementation of the
  1. Otherwise, if ! [$ReadableStreamHasBYOBReader$](|stream|) is true,
   1. Perform ! [$ReadableByteStreamControllerEnqueueChunkToQueue$](|controller|,
      |transferredBuffer|, |byteOffset|, |byteLength|).
-  1. Let |filledPullIntos| be the result of performing
-     ! [$ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue$](|controller|).
-  1. [=list/For each=] |filledPullInto| of |filledPullIntos|,
-    1. Perform !
-       [$ReadableByteStreamControllerCommitPullIntoDescriptor$](|stream|, |filledPullInto|).
+  1. Perform ! [$ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue$](|controller|).
  1. Otherwise,
   1. Assert: ! [$IsReadableStreamLocked$](|stream|) is false.
   1. Perform ! [$ReadableByteStreamControllerEnqueueChunkToQueue$](|controller|,
@@ -3437,7 +3451,6 @@ The following abstract operations support the implementation of the
     |maxBytesToCopy|.
  1. Let |totalBytesToCopyRemaining| be |maxBytesToCopy|.
  1. Let |ready| be false.
- 1. Assert: ! [$IsDetachedBuffer$](|pullIntoDescriptor|'s [=pull-into descriptor/buffer=]) is false.
  1. Assert: |pullIntoDescriptor|'s [=pull-into descriptor/bytes filled=] < |pullIntoDescriptor|'s
     [=pull-into descriptor/minimum fill=].
  1. Let |remainderBytes| be the remainder after dividing |maxBytesFilled| by |pullIntoDescriptor|'s
@@ -3457,18 +3470,10 @@ The following abstract operations support the implementation of the
      queue entry/byte length=]).
   1. Let |destStart| be |pullIntoDescriptor|'s [=pull-into descriptor/byte offset=] +
      |pullIntoDescriptor|'s [=pull-into descriptor/bytes filled=].
-  1. Let |descriptorBuffer| be |pullIntoDescriptor|'s [=pull-into descriptor/buffer=].
-  1. Let |queueBuffer| be |headOfQueue|'s [=readable byte stream queue entry/buffer=].
-  1. Let |queueByteOffset| be |headOfQueue|'s [=readable byte stream queue entry/byte offset=].
-  1. Assert: ! [$CanCopyDataBlockBytes$](|descriptorBuffer|, |destStart|, |queueBuffer|,
-     |queueByteOffset|, |bytesToCopy|) is true.
-     <p class="warning">If this assertion were to fail (due to a bug in this specification or
-     its implementation), then the next step may read from or write to potentially invalid memory.
-     The user agent should always check this assertion, and stop in an [=implementation-defined=]
-     manner if it fails (e.g. by crashing the process, or by
-     <a abstract-op lt="ReadableByteStreamControllerError">erroring the stream</a>).
-  1. Perform ! [$CopyDataBlockBytes$](|descriptorBuffer|.\[[ArrayBufferData]], |destStart|,
-     |queueBuffer|.\[[ArrayBufferData]], |queueByteOffset|, |bytesToCopy|).
+  1. Perform ! [$CopyDataBlockBytes$](|pullIntoDescriptor|'s [=pull-into
+     descriptor/buffer=].\[[ArrayBufferData]], |destStart|,
+     |headOfQueue|'s [=readable byte stream queue entry/buffer=].\[[ArrayBufferData]],
+     |headOfQueue|'s [=readable byte stream queue entry/byte offset=], |bytesToCopy|).
   1. If |headOfQueue|'s [=readable byte stream queue entry/byte length=] is |bytesToCopy|,
    1. [=list/Remove=] |queue|[0].
   1. Otherwise,
@@ -3574,17 +3579,17 @@ The following abstract operations support the implementation of the
  performs the following steps:
 
  1. Assert: |controller|.[=ReadableByteStreamController/[[closeRequested]]=] is false.
- 1. Let |filledPullIntos| be a new empty [=list=].
  1. [=While=] |controller|.[=ReadableByteStreamController/[[pendingPullIntos]]=] is not
     [=list/is empty|empty=],
-  1. If |controller|.[=ReadableByteStreamController/[[queueTotalSize]]=] is 0, then [=break=].
+  1. If |controller|.[=ReadableByteStreamController/[[queueTotalSize]]=] is 0, return.
   1. Let |pullIntoDescriptor| be
      |controller|.[=ReadableByteStreamController/[[pendingPullIntos]]=][0].
   1. If ! [$ReadableByteStreamControllerFillPullIntoDescriptorFromQueue$](|controller|,
      |pullIntoDescriptor|) is true,
    1. Perform ! [$ReadableByteStreamControllerShiftPendingPullInto$](|controller|).
-   1. [=list/Append=] |pullIntoDescriptor| to |filledPullIntos|.
- 1. Return |filledPullIntos|.
+   1. Perform !
+      [$ReadableByteStreamControllerCommitPullIntoDescriptor$](|controller|.[=ReadableByteStreamController/[[stream]]=],
+      |pullIntoDescriptor|).
 </div>
 
 <div algorithm>
@@ -3714,15 +3719,11 @@ The following abstract operations support the implementation of the
     perform ! [$ReadableByteStreamControllerShiftPendingPullInto$](|controller|).
  1. Let |stream| be |controller|.[=ReadableByteStreamController/[[stream]]=].
  1. If ! [$ReadableStreamHasBYOBReader$](|stream|) is true,
-  1. Let |filledPullIntos| be a new empty [=list=].
-  1. [=While=] |filledPullIntos|'s [=list/size=] < !
-     [$ReadableStreamGetNumReadIntoRequests$](|stream|),
+  1. [=While=] ! [$ReadableStreamGetNumReadIntoRequests$](|stream|) > 0,
    1. Let |pullIntoDescriptor| be !
       [$ReadableByteStreamControllerShiftPendingPullInto$](|controller|).
-   1. [=list/Append=] |pullIntoDescriptor| to |filledPullIntos|.
-  1. [=list/For each=] |filledPullInto| of |filledPullIntos|,
    1. Perform ! [$ReadableByteStreamControllerCommitPullIntoDescriptor$](|stream|,
-      |filledPullInto|).
+      |pullIntoDescriptor|).
 </div>
 
 <div algorithm>
@@ -3737,12 +3738,7 @@ The following abstract operations support the implementation of the
  1. If |pullIntoDescriptor|'s [=pull-into descriptor/reader type=] is "`none`",
   1. Perform ? [$ReadableByteStreamControllerEnqueueDetachedPullIntoToQueue$](|controller|,
      |pullIntoDescriptor|).
-  1. Let |filledPullIntos| be the result of performing
-     ! [$ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue$](|controller|).
-  1. [=list/For each=] |filledPullInto| of |filledPullIntos|,
-    1. Perform !
-       [$ReadableByteStreamControllerCommitPullIntoDescriptor$](|controller|.[=ReadableByteStreamController/[[stream]]=],
-       |filledPullInto|).
+  1. Perform ! [$ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue$](|controller|).
   1. Return.
  1. If |pullIntoDescriptor|'s [=pull-into descriptor/bytes filled=] &lt; |pullIntoDescriptor|'s
     [=pull-into descriptor/minimum fill=], return.
@@ -3760,15 +3756,10 @@ The following abstract operations support the implementation of the
       |remainderSize|).
  1. Set |pullIntoDescriptor|'s [=pull-into descriptor/bytes filled=] to |pullIntoDescriptor|'s
     [=pull-into descriptor/bytes filled=] − |remainderSize|.
- 1. Let |filledPullIntos| be the result of performing
-    ! [$ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue$](|controller|).
  1. Perform !
     [$ReadableByteStreamControllerCommitPullIntoDescriptor$](|controller|.[=ReadableByteStreamController/[[stream]]=],
     |pullIntoDescriptor|).
- 1. [=list/For each=] |filledPullInto| of |filledPullIntos|,
-   1. Perform !
-      [$ReadableByteStreamControllerCommitPullIntoDescriptor$](|controller|.[=ReadableByteStreamController/[[stream]]=],
-      |filledPullInto|).
+ 1. Perform ! [$ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue$](|controller|).
 </div>
 
 <div algorithm>
@@ -5242,7 +5233,7 @@ The following abstract operations support the implementation and manipulation of
  1. Return |promise|.
 </div>
 
-<h4 id="ws-default-controller-abstract-ops">Default controllers</h4>
+<h4 id="ws-default-controller-abstract-ops">Default controllers</h3>
 
 The following abstract operations support the implementation of the
 {{WritableStreamDefaultController}} class.
@@ -5295,8 +5286,8 @@ The following abstract operations support the implementation of the
  1. Let |abortAlgorithm| be an algorithm that returns [=a promise resolved with=] undefined.
  1. If |underlyingSinkDict|["{{UnderlyingSink/start}}"] [=map/exists=], then set |startAlgorithm| to
     an algorithm which returns the result of [=invoking=]
-    |underlyingSinkDict|["{{UnderlyingSink/start}}"] with argument list «&nbsp;|controller|&nbsp;»,
-    exception behavior "<code>rethrow</code>", and [=callback this value=] |underlyingSink|.
+    |underlyingSinkDict|["{{UnderlyingSink/start}}"] with argument list «&nbsp;|controller|&nbsp;»
+    and [=callback this value=] |underlyingSink|.
  1. If |underlyingSinkDict|["{{UnderlyingSink/write}}"] [=map/exists=], then set |writeAlgorithm| to
     an algorithm which takes an argument |chunk| and returns the result of [=invoking=]
     |underlyingSinkDict|["{{UnderlyingSink/write}}"] with argument list «&nbsp;|chunk|,
@@ -5400,10 +5391,6 @@ The following abstract operations support the implementation of the
  id="writable-stream-default-controller-get-chunk-size">WritableStreamDefaultControllerGetChunkSize(|controller|,
  |chunk|)</dfn> performs the following steps:
 
- 1. If |controller|.[=WritableStreamDefaultController/[[strategySizeAlgorithm]]=] is undefined, then:
-  1. Assert: |controller|.[=WritableStreamDefaultController/[[stream]]=].[=WritableStream/[[state]]=] is "`erroring`" or
-     "`errored`".
-  1. Return 1.
  1. Let |returnValue| be the result of performing
     |controller|.[=WritableStreamDefaultController/[[strategySizeAlgorithm]]=], passing in |chunk|,
     and interpreting the result as a [=completion record=].
@@ -6599,7 +6586,7 @@ a {{QueuingStrategy}} dictionary.
      list «&nbsp;|chunk|&nbsp;».
 </div>
 
-<h2 id="other-stuff">Supporting abstract operations</h2>
+<h2 id="other-stuff">Supporting abstract operations</h4>
 
 The following abstract operations each support the implementation of more than one type of stream,
 and as such are not grouped under the major sections above.
@@ -6721,10 +6708,10 @@ abstract operations are used to implement these "cross-realm transforms".
  1. Let |controller| be a [=new=] {{ReadableStreamDefaultController}}.
  1. Add a handler for |port|'s {{MessagePort/message}} event with the following steps:
   1. Let |data| be the data of the message.
-  1. Assert: |data| [=is an Object=].
+  1. Assert: [$Type$](|data|) is Object.
   1. Let |type| be ! [$Get$](|data|, "`type`").
   1. Let |value| be ! [$Get$](|data|, "`value`").
-  1. Assert: |type| [=is a String=].
+  1. Assert: [$Type$](|type|) is String.
   1. If |type| is "`chunk`",
    1. Perform ! [$ReadableStreamDefaultControllerEnqueue$](|controller|, |value|).
   1. Otherwise, if |type| is "`close`",
@@ -6766,10 +6753,10 @@ abstract operations are used to implement these "cross-realm transforms".
  1. Let |backpressurePromise| be [=a new promise=].
  1. Add a handler for |port|'s {{MessagePort/message}} event with the following steps:
   1. Let |data| be the data of the message.
-  1. Assert: |data| [=is an Object=].
+  1. Assert: [$Type$](|data|) is Object.
   1. Let |type| be ! [$Get$](|data|, "`type`").
   1. Let |value| be ! [$Get$](|data|, "`value`").
-  1. Assert: |type| [=is a String=].
+  1. Assert: [$Type$](|type|) is String.
   1. If |type| is "`pull`",
    1. If |backpressurePromise| is not undefined,
     1. [=Resolve=] |backpressurePromise| with undefined.
@@ -6815,7 +6802,7 @@ abstract operations are used to implement these "cross-realm transforms".
  security issues.</p>
 </div>
 
-<h3 id="misc-abstract-ops">Miscellaneous</h3>
+<h3 id="misc-abstract-ops">Miscellaneous</h4>
 
 The following abstract operations are a grab-bag of utilities.
 
@@ -6823,7 +6810,7 @@ The following abstract operations are a grab-bag of utilities.
  <dfn abstract-op lt="CanTransferArrayBuffer"
  id="can-transfer-array-buffer">CanTransferArrayBuffer(|O|)</dfn> performs the following steps:
 
- 1. Assert: |O| [=is an Object=].
+ 1. Assert: [$Type$](|O|) is Object.
  1. Assert: |O| has an \[[ArrayBufferData]] internal slot.
  1. If ! [$IsDetachedBuffer$](|O|) is true, return false.
  1. If [$SameValue$](|O|.\[[ArrayBufferDetachKey]], undefined) is false, return false.
@@ -6834,7 +6821,7 @@ The following abstract operations are a grab-bag of utilities.
  <dfn abstract-op lt="IsNonNegativeNumber"
  id="is-non-negative-number">IsNonNegativeNumber(|v|)</dfn> performs the following steps:
 
- 1. If |v| [=is not a Number=], return false.
+ 1. If [$Type$](|v|) is not Number, return false.
  1. If |v| is NaN, return false.
  1. If |v| &lt; 0, return false.
  1. Return true.
@@ -6859,7 +6846,7 @@ The following abstract operations are a grab-bag of utilities.
 <div algorithm>
  <dfn abstract-op lt="CloneAsUint8Array">CloneAsUint8Array(|O|)</dfn> performs the following steps:
 
- 1. Assert: |O| [=is an Object=].
+ 1. Assert: [$Type$](|O|) is Object.
  1. Assert: |O| has an \[[ViewedArrayBuffer]] internal slot.
  1. Assert: ! [$IsDetachedBuffer$](|O|.\[[ViewedArrayBuffer]]) is false.
  1. Let |buffer| be ? [$CloneArrayBuffer$](|O|.\[[ViewedArrayBuffer]], |O|.\[[ByteOffset]],
@@ -6873,22 +6860,6 @@ The following abstract operations are a grab-bag of utilities.
 
  1. Let |serialized| be ? [$StructuredSerialize$](|v|).
  1. Return ? [$StructuredDeserialize$](|serialized|, [=the current Realm=]).
-</div>
-
-<div algorithm>
- <dfn abstract-op lt="CanCopyDataBlockBytes">CanCopyDataBlockBytes(|toBuffer|, |toIndex|,
- |fromBuffer|, |fromIndex|, |count|)</dfn> performs the following steps:
-
- 1. Assert: |toBuffer| [=is an Object=].
- 1. Assert: |toBuffer| has an \[[ArrayBufferData]] internal slot.
- 1. Assert: |fromBuffer| [=is an Object=].
- 1. Assert: |fromBuffer| has an \[[ArrayBufferData]] internal slot.
- 1. If |toBuffer| is |fromBuffer|, return false.
- 1. If ! [$IsDetachedBuffer$](|toBuffer|) is true, return false.
- 1. If ! [$IsDetachedBuffer$](|fromBuffer|) is true, return false.
- 1. If |toIndex| + |count| > |toBuffer|.\[[ArrayBufferByteLength]], return false.
- 1. If |fromIndex| + |count| > |fromBuffer|.\[[ArrayBufferByteLength]], return false.
- 1. Return true.
 </div>
 
 <h2 id="other-specs">Using streams in other specifications</h2>
@@ -7528,13 +7499,14 @@ web developer code insert [=transform streams=] into the middle of them.
 
  <xmp highlight="js">
  const { readable, writable } = createEndpointPair();
- await readable.pipeThrough(new TransformStream(...)).pipeTo(writable);
+ readable.pipeThrough(new TransformStream(...)).pipeTo(writable);
  </xmp>
 </div>
 
-<p class="example" id="example-endpoint-pair-webrtc"><cite>WebRTC Encoded Transform</cite>
-is an example of this technique, with its {{RTCRtpScriptTransformer}} interface which has
-both `readable` and `writable` attributes.
+<p class="example" id="example-endpoint-pair-webrtc"><cite>WebRTC Insertable Media using
+Streams</cite> is an example of this technique, with its `sender.createEncodedStreams()` and
+`receiver.createEncodedStreams()` methods.
+<!-- TODO cite it and cross-link to it https://github.com/tobie/specref/issues/620 -->
 
 Despite such endpoint pairs obeying the `readable`/`writable` property contract, it never makes
 sense to pass them to {{ReadableStream/pipeThrough()}}.

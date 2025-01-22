@@ -15,7 +15,7 @@ exports.implementation = class ReadableStreamImpl {
     if (underlyingSource === undefined) {
       underlyingSource = null;
     }
-    const underlyingSourceDict = UnderlyingSource.convert(underlyingSource);
+    const underlyingSourceDict = UnderlyingSource.convert(globalObject, underlyingSource);
 
     aos.InitializeReadableStream(this);
 
@@ -150,6 +150,10 @@ exports.implementation = class ReadableStreamImpl {
 
     aos.ReadableStreamDefaultReaderRelease(reader);
     return promiseResolvedWith(undefined);
+  }
+
+  static from(asyncIterable) {
+    return aos.ReadableStreamFromIterable(asyncIterable);
   }
 };
 
